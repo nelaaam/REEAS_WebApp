@@ -1,0 +1,27 @@
+{
+  "name": "reeasproject",
+  "version": "1.0.0",
+  "description": "reeas web application",
+  "main": "db_config.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/nelaaam/REEAS_WebApp.git"
+  },
+  "keywords": [
+    "webapp",
+    "server",
+    "JavaScript"
+  ],
+  "author": "Kanela Martino, Sean Jerusalem, Ivann Icaro",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/nelaaam/REEAS_WebApp/issues"
+  },
+  "homepage": "https://github.com/nelaaam/REEAS_WebApp#readme",
+  "dependencies": {
+    "express": "^4.16.4"
+  }
+}
