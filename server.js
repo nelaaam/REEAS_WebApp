@@ -1,20 +1,10 @@
 const express = require('express');
-const app = express();
+const detectionRoute = require('./api/routes/detections/detections');
+const server = express();
 
-app.get('/', (req, res) => {
-    res.send('Hello World');
-});
+server.use('/route/detections', detectionRoute);
 
-app.get('/api/detections', (req, res) => {
-    res.send([1,2,3]);
-});
-
-app.post('/', (req, res) => {
-    res.send('POST request to homepage');
-});
-
-const port = process.env.PORT || 3000;
-app.listen(port, () => {
+port = process.env.PORT || 3000;
+server.listen(port, () => {
     console.log("Listening on port " + port);
 });
-
