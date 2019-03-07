@@ -1,7 +1,20 @@
-var express = require('express'),
-  app = express(),
-  port = process.env.PORT || 3000;
+const express = require('express');
+const app = express();
 
-app.listen(port);
+app.get('/', (req, res) => {
+    res.send('Hello World');
+});
 
-console.log('Server running on: ' + port);
+app.get('/api/detections', (req, res) => {
+    res.send([1,2,3]);
+});
+
+app.post('/', (req, res) => {
+    res.send('POST request to homepage');
+});
+
+const port = process.env.PORT || 3000;
+app.listen(port, () => {
+    console.log("Listening on port " + port);
+});
+
