@@ -27,16 +27,16 @@ process.on('message', (msg) => {
     //displacement average
     const disAve = sum/a2p.length;
     const sensor_id = msg.sensor_id;
-    const timestamp = msg.timestamp_id; 
+    const timestamp = msg.datetime; 
     //process data storing to db
-    
-    table = "XAxis_Record";
-    if(msg.data_id == 0) table = "XAxis_Record";
-    else if(msg.data_id == 1) table = "XAxis_Record"; 
-    else if(msg.data_id == 2) table = "XAxis_Record";
-    query = "INSERT INTO ? (sensor_id, peak_amplitude, timestamp) VALUES (?,?,?)";
+    var table;
+    console.log("timestamp = " +timestamp);
+    if(msg.data_id == 0) table = 'XAxis_Record';
+    else if(msg.data_id == 1) table = 'YAxis_Record'; 
+    else if(msg.data_id == 2) table = 'ZAxis_Record';
+    var sql= "INSERT INTO ?? (sensor_id, peak_amplitude, timestamp) VALUES (?,?,?)";
     var inserts = [table, sensor_id, disAve, timestamp];
-    var query = mysql.format(query, inserts);
+    query = mysql.format(sql, inserts);
     db.getConnection((err, conn) => {
         conn.query('SELECT something from sometable', (error, results, fields) => {
             if (err) throw err;
@@ -44,10 +44,9 @@ process.on('message', (msg) => {
             var finalquery = conn.query(query, function(err, res, fields){
                 if (err) throw err;
                 console.log(res.insertId);
-                //conn.release();
+                conn.release();
             });
             console.log(finalquery.sql);
-            db.release();
         });
       });
    
