@@ -37,19 +37,19 @@ process.on('message', (msg) => {
     query = "INSERT INTO ? (sensor_id, peak_amplitude, timestamp) VALUES (?,?,?)";
     var inserts = [table, sensor_id, disAve, timestamp];
     var query = mysql.format(query, inserts);
-    
-    db.getConnection(function (err, conn) {
-        if (err) throw err;
-        else console.log("Connection variable created.");
-        var finalquery = conn.query(query, function(err, res, fields){
+    db.getConnection((err, conn) => {
+        conn.query('SELECT something from sometable', (error, results, fields) => {
             if (err) throw err;
-            console.log(res.insertId);
-            //conn.release();
+            else console.log("Connection variable created.");
+            var finalquery = conn.query(query, function(err, res, fields){
+                if (err) throw err;
+                console.log(res.insertId);
+                //conn.release();
+            });
+            console.log(finalquery.sql);
+            db.release();
         });
-        console.log(finalquery.sql);
-        db.release();
-        
-    });
+      });
    
 });
 
