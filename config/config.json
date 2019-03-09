@@ -1,0 +1,12 @@
+{
+  "routes": [
+    {
+      "route": "/sensorclient",
+      "address": "http://www.reeas-web.com:3001"
+    },
+    {
+      "route": "/androidclient",
+      "address": "http://www.reeas-web.com:3002"
+    }
+  ]
+}

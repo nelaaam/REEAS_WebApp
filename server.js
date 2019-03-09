@@ -1,10 +1,10 @@
 const express = require('express');
-const detectionRoute = require('./api/routes/detections/detections');
+const detectionRoute = require('./api/routes/detections');
 const server = express();
 
-server.use('/route/detections', detectionRoute);
+server.use('/detections', detectionRoute);
 
-port = process.env.PORT || 3000;
+port = process.env.PORT || 3001;
 server.listen(port, () => {
     console.log("Listening on port " + port);
 });
