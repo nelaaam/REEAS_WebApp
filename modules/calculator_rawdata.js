@@ -1,5 +1,6 @@
 const db = require('../config/connection');
 const Joi = require('joi');
+const mysql = require('mysql');
 var vel = [0,0];
 var acc = [0,0];
 var pos = [0,0];
@@ -25,12 +26,31 @@ process.on('message', (msg) => {
     }
     //displacement average
     const disAve = sum/a2p.length;
-    //data storing
-    if(msg.data_id == 1) var table = "XAxis_Records";
-    else if(msg.data_id == 1) var table = "YAxis_Records";
-    else if(msg.data_id == 2) var table = "ZAxis_Records";
-
-
+    const sensor_id = msg.sensor_id;
+    const timestamp = msg.timestamp_id; 
+    //process data storing to db
+    
+    table = "XAxis_Record";
+    if(msg.data_id == 0) table = "XAxis_Record";
+    else if(msg.data_id == 1) table = "XAxis_Record"; 
+    else if(msg.data_id == 2) table = "XAxis_Record";
+    query = "INSERT INTO ? (sensor_id, peak_amplitude, timestamp) VALUES (?,?,?)";
+    var inserts = [table, sensor_id, disAve, timestamp];
+    var query = mysql.format(query, inserts);
+    
+    db.getConnection(function (err, conn) {
+        if (err) throw err;
+        else console.log("Connection variable created.");
+        var finalquery = conn.query(query, function(err, res, fields){
+            if (err) throw err;
+            console.log(res.insertId);
+            //conn.release();
+        });
+        console.log(finalquery.sql);
+        db.release();
+        
+    });
+   
 });
 
 function validateMsg(message) {
@@ -42,9 +62,3 @@ function validateMsg(message) {
     }    
     return Joi.validate(message, schema);
 }
-
-
-
-
-
-
