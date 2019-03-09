@@ -15,5 +15,3 @@ module.export = {
     return pool.getConnection(callback);
   } 
 }
-
-module.exports = getConnection;
