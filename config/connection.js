@@ -10,8 +10,4 @@ var pool = mysql.createPool({
     database: config.get('db_name'),
  });
 
-module.export = {
-  getConnection: (callback) => {
-    return pool.getConnection(callback);
-  } 
-}
+module.exports = pool;
