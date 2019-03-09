@@ -27,7 +27,8 @@ process.on('message', (msg) => {
     //displacement average
     const disAve = sum/a2p.length;
     const sensor_id = msg.sensor_id;
-    const timestamp = msg.datetime; 
+    const timestamp = new Date(msg.timestamp); 
+    
     //process data storing to db
     var table;
     console.log("timestamp = " +timestamp);
