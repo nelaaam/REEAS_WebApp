@@ -1,15 +1,13 @@
 const express = require('express');
+const db = require('../config/connection');
 const Joi = require('joi');
-const db = require('../../config/db_config');
+const mysql = require('mysql');
 const integrate = require('child_process');
-const rawCalculator = "calculator_rawdata.js";
 
 const router = express.Router();
 
 router.use(express.json());
 var child;
-var detections = [];
-var sensor_id, longitude, latitude, datetime, xaxis, yaxis, zaxis;
 
 router.post('/', (req, res) => {  
     const { error } = validateDetections(req.body); 
@@ -18,18 +16,19 @@ router.post('/', (req, res) => {
         return;
     }
     res.send("POST Request Successful");
-    var xData = req.body.xacc;
-    var yData = req.body.yacc;
-    var zData = req.body.zacc;
-    var dataArr = [xData, yData, zData];
+    const xData = req.body.va;
+    const yData = req.body.ns;
+    const zData = req.body.ew;
+
+    const dataArr = [xData, yData, zData];
     for (i=0; i<3; i++){
         const detection = {
             data_id: i,
-            sensor_id: req.body.id,
+            sensor_id: req.body.sensor_id,
             datetime: req.body.datetime,
             data: dataArr[i],
         }
-      child = integrate.fork("./modules/calculator_rawdata.js");
+      child = integrate.fork("./modules/displacement.js");
       child.send(detection);
     }
     child.on('error', (err) => {
@@ -38,9 +37,28 @@ router.post('/', (req, res) => {
     child.on('exit', () => {
         console.log("Integration process terminated.");
     });
-    child.on('message', (msg) => {
-        console.log("Displacement Average is  " + msg);
+    
+    /*
+    //P-WAVE PALANG TO:
+    db.getConnection((err, conn) => {
+        conn.query('SELECT COUNT(DISTINCT sensor_id) FROM ZAxis_Record;', (error, results, fields) => {
+            if (err) throw err;
+            console.log(results);
+            const dataCount = results;
+        });
     });
+    if(datacount >= 3) {
+        //TODO: Calculate magnitude and epicenter
+        //SELECT TOP 3 DISTINCT sensor_id FROM ZAxis_Record ORDER BY timestamp ASC
+        //SELECT latitude, longitude FROM Sensor_Record WHERE sensor_id = ???
+        //FORK calculator_epicenter.js
+        //FORK calculator_magnitude.JS
+        //FORK notification_data.js
+        
+    }/* else {
+        //TODO: Calculate magnitude only
+        //
+    }*/
 });
 
 function validateDetections(detected) {
@@ -57,4 +75,3 @@ function validateDetections(detected) {
 }
 
 module.exports = router;
-
