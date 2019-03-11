@@ -1,5 +1,5 @@
 const express = require('express');
-const db = require('../config/connection');
+const db = require('../../config/connection');
 const Joi = require('joi');
 const mysql = require('mysql');
 const integrate = require('child_process');
@@ -63,13 +63,14 @@ router.post('/', (req, res) => {
 
 function validateDetections(detected) {
     const schema = {
-        id: Joi.number().required(),
+        wave_id: Joi.number().required().min(0).max(1),
+        sensor_id: Joi.number().required(),
         long: Joi.number().precision(10),
         lat: Joi.number().precision(10),
         datetime: Joi.date().timestamp('unix').required(),
-        xacc: Joi.array().length(50).required(),
-        yacc: Joi.array().length(50).required(),
-        zacc: Joi.array().length(50).required()
+        va: Joi.array().length(50).required(),
+        ns: Joi.array().length(50).required(),
+        ew: Joi.array().length(50).required()
     }    
     return Joi.validate(detected, schema);
 }
