@@ -1,5 +1,5 @@
 const express = require('express');
-const DetectionController = require('../controllers/detectionController');
+const EarthquakesController = require('../controllers/earthquakesController');
 const router = express.Router();
 
 //router.use(express.json());

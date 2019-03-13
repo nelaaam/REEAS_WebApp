@@ -26,8 +26,9 @@ exports.sendMessageToTopic = function(payload, messageID) {
       });
   }
   
-  exports.sendMessagetoToken = function(payload) {
-      admin.messaging().sendToDevice(payload, options)
+  exports.sendMessageToToken = function (payload) {
+      console.log(payload);
+      admin.messaging().sendToTopic(topic, payload, notifOptions)
       .then(function (response) {
         console.log("Successfully sent message: ", response);
       })
