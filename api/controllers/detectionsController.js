@@ -1,4 +1,3 @@
-const validator = require('../../scripts/validator');
 const db = require('../../config/connection');
 const child = require('child_process');
 
@@ -47,7 +46,7 @@ exports.post_new_detection = (req, res) => {
     db.getConnection((err, conn) => {
         if (err) throw err;
         //VALIDATION OF EARTHQUAKE
-        conn.query('SELECT (DISTINCT sensor_id),timestamp FROM Displacement_Record WHERE wave_type = 1 BY timestamp ASC ;', (err, res, fields) => {
+        conn.query('SELECT COUNT DISTINCT sensor_id FROM Displacement_Record WHERE wave_type = 1 BY timestamp ASC ;', (err, res, fields) => {
             if (err) throw err;
             console.log("Sensor_id: " + res.sensor_id);
             console.log(res);/*
