@@ -1,6 +1,4 @@
 const db = require('../../config/connection');
-const child = require('child_process');
-const messenger = require('../../scripts/messenger');
 var payload;
 
 exports.get_all = (req, response) => {
@@ -9,12 +7,12 @@ exports.get_all = (req, response) => {
         var query = "SELECT * FROM Events_Record ORDER BY event_id ASC";
         conn.query(query, function (err, res, fields) {
             if (err) throw err;
-		results = JSON.parse(JSON.stringify(res));
-            payload = { "data" : results };
-		console.log(payload);
-		response.send(payload);
+            results = JSON.parse(JSON.stringify(res));
+            payload = { "data": results };
+            console.log(payload);
+            response.send(payload);
         });
-conn.release();
+        conn.release();
     });
 }
 exports.get_by_year = (req, res) => {

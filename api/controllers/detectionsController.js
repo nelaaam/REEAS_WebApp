@@ -48,13 +48,9 @@ exports.post_new_detection = (req, res) => {
         //VALIDATION OF EARTHQUAKE
         conn.query('SELECT COUNT DISTINCT sensor_id FROM Displacement_Record WHERE wave_type = 1 BY timestamp ASC ;', (err, res, fields) => {
             if (err) throw err;
-            console.log("Sensor_id: " + res.sensor_id);
-            console.log(res);/*
             if (res.length >= 3) { //verified event
-                epicenter = child.fork("./modules/epicenter.js");
-                magnitude = child.fork("./modules/magnitude.js");
-                
-                epicenter.send(res.sensor_id);
+                parameters = child.fork("./modules/parameters.js");
+                /*
                 epicenter.on('message', (latitude, longitude) => {
                     lat = latitude;
                     long = longitude;
@@ -83,10 +79,11 @@ exports.post_new_detection = (req, res) => {
                             clearEvent = child.fork("./modules/clearEvent.js");     
                         }
                     });
-                }
+                }*/
             } else { //unverified event try to calculate magnitude and epicenter
-
-            }*/
+                console.log("Triggered sensors less than 3, event not verified! Logging as false trigger.");
+                //LOG to falsetriggers.txt
+            }
         });
     });
 }
