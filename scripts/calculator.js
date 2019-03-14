@@ -83,5 +83,5 @@ var x = (C * E - F * B) / (E * A - B * D);
 var y = (C * D - A * F) / (B * D - A * E);
 
 var epicenter = [x,y];
-retrurn epicenter;
+return epicenter;
 }
