@@ -1,5 +1,4 @@
 exports.getDisplacement = function (data) {
-
     //initialize
     var vel = [0, 0];
     var acc = [0, 0];
@@ -7,7 +6,7 @@ exports.getDisplacement = function (data) {
     var ap = [], a2p = [], sum = 0;
 
     //integrate
-    for (i = 0; i != 50; i++) {
+    for (i = 0; i < data.length; i++) {
         acc[1] = data[i];
         vel[1] = vel[0] + acc[0] * 0.02 + ((acc[1] - acc[0]) / 2) * 0.02;
         pos[1] = pos[0] + vel[0] * 0.02 + ((vel[1] - vel[0]) / 2) * 0.02;
@@ -17,7 +16,9 @@ exports.getDisplacement = function (data) {
         vel[0] = vel[1];
         pos[0] = pos[1];
     }
-    const sum = a2p => a2p.reduce((a,b) => a + b, 0)
+	for (var i = 0; i < a2p.length; i++) {
+		sum = sum + a2p[i];
+	}
     //displacement average
     const peak_amplitude = sum / a2p.length;
 
@@ -43,18 +44,26 @@ exports.getEstimatedVelocity = function (d, t) {
     return d / t;
 }
 
-exports.getCoordinateDistance = function (lat1, lat2, lon1, lon2) {
-    const R = 6371e3; // metres
-    const φ1 = lat1.toRadians();
-    const φ2 = lat2.toRadians();
-    const Δφ = (lat2 - lat1).toRadians();
-    const Δλ = (lon2 - lon1).toRadians();
-
-    const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) + Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+exports.getCoordinateDistance = function (loc1, loc2) {
+	const lat1 = loc1[0];
+	const lon1 = loc1[1];
+	const lat2 = loc2[0];
+	const lon2 = loc2[1];
+const R = 6371e3; // metres
+    const l1 = Math.radians(lat1);
+    const l2 = Math.radians(lat2);
+    const ln1 = Math.radians(lon1);
+    const ln2 = Math.radians(lon2);
+const ltDiff = l1-l2;
+console.log("Diff " + ltDiff);
+    const latDiff = Math.radians(ltDiff);
+    const lonDiff = Math.radians(lon2 - lon1);
+	console.log("l1 =" + latDiff);
+    const a = Math.sin(latDiff / 2) * Math.sin(latDiff / 2) + Math.cos(l1) * Math.cos(l2) * Math.sin(lonDiff / 2) * Math.sin(lonDiff / 2);
+	console.log("a  = " + a);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 
-    return d = R * c
-}
+    return d = R * c}
 
 //pwave and swave time of arrival
 exports.getTimeDifference = function(time1, time2) {
@@ -84,4 +93,8 @@ var y = (C * D - A * F) / (B * D - A * E);
 
 var epicenter = [x,y];
 return epicenter;
+}
+
+Math.radians = function(degrees) {
+	return degrees * Math.PI / 180;
 }

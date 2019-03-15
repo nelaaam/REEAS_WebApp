@@ -1,3 +1,4 @@
+const Joi = require('joi');
 const db = require('../../config/connection');
 const child = require('child_process');
 
@@ -46,9 +47,9 @@ exports.post_new_detection = (req, res) => {
     db.getConnection((err, conn) => {
         if (err) throw err;
         //VALIDATION OF EARTHQUAKE
-        conn.query('SELECT COUNT DISTINCT sensor_id FROM Displacement_Record WHERE wave_type = 1 BY timestamp ASC ;', (err, res, fields) => {
+        conn.query('SELECT COUNT (DISTINCT sensor_id) AS count FROM Displacement_Record WHERE wave_type = 1 ORDER BY timestamp ASC', (err, res, fields) => {
             if (err) throw err;
-            if (res.length >= 3) { //verified event
+            if (res[0].count >= 3) { //verified event
                 parameters = child.fork("./modules/parameters.js");
                 /*
                 epicenter.on('message', (latitude, longitude) => {
@@ -87,3 +88,15 @@ exports.post_new_detection = (req, res) => {
         });
     });
 }
+function validateDetections(detected) {
+    const schema = {
+        wave_type: Joi.number().required().min(0).max(1),
+        sensor_id: Joi.number().required(),
+        timestamp: Joi.date().timestamp('unix').required(),
+        va: Joi.array().length(50).required(),
+        ns: Joi.array().length(50).required(),
+        ew: Joi.array().length(50).required()
+    }
+    return Joi.validate(detected, schema);
+}
+

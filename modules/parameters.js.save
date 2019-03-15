@@ -1,0 +1,37 @@
+const db = require('../config/connection');
+const Joi = require('joi');
+const mysql = require('mysql');
+const calculator = require('../scripts/calculator');
+
+//prepare query
+var sql1 = "SELECT DISTINCT sensor_id, timestamp FROM Displacement_Record WHERE wave_type = 0 ORDER BY timestamp ASC";
+var sql2 = "SELECT timestamp FROM Displacement_Record WHERE wave_type = 1 && sensor_id = ?";
+var sql3 = "SELECT latitude, longitude FROM Sensor_Record WHERE sensor_id = ?";
+var sensor, pTime, sTime;
+
+//connect to database
+db.getConnection((err, conn) => {
+    if (err) throw err;
+    conn.query(sql1, function (err, res, fields) {
+        if (err) throw err;
+console.log(res);
+        for(i=0; i<res.length; i++){
+            sensor = res[i].sensor_id;
+            pTime = res[i].timestamp;
+console.log(pTime);
+            sql2 = mysql.format(sql2, sensor);
+            sql3 = mysql.format(sql3, sensor);
+            conn.query(sql2, function(err, results, fields){
+                if (err) throw err;
+console.log(i);
+                var sTime = results[i].timestamp;
+                conn.query(sql3, function(err, res, fields){
+                    if (err) throw err;
+                    var location = [res[i].latitude, res[i].longitude];
+                    console.log("Data = " + sensor + " " + pTime + " " + sTime + " " + latitude + " " + longitude);
+                });
+            });
+        }
+    });
+    conn.release();
+});

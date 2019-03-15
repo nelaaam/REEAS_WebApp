@@ -8,7 +8,7 @@ process.on('message', (msg) => {
     validateMsg(msg);
     //displacement calculation
     const xDispacement = calculator.getDisplacement(msg.va);
-    const yDisplacement = calculator.getDisplacement(msg.nw);
+    const yDisplacement = calculator.getDisplacement(msg.ns);
     const zDisplacement = calculator.getDisplacement(msg.ew);
     //other data
     const wave_type = msg.wave_type;
