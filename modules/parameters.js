@@ -34,10 +34,6 @@ db.getConnection((err, conn) => {
         });
         let getSensorPromise = new Promise(function (resolve, reject) {
             async.forEachOfSeries(sensor, function (id, index, callback) {
-	console.log("id init = " + id);
-	console.log("id = " + id);
-	console.log(sql3);
-	console.log("index = " + index);
                 conn.query(sql3, id, function (err, result) {
                     if (err) {
                         return reject(err);
@@ -73,10 +69,10 @@ db.getConnection((err, conn) => {
                 pTimeDifference[2] = calculator.getTimeDifference(pTime[1], pTime[2]);
                 sTimeDifference[2] = calculator.getTimeDifference(sTime[1], sTime[2]);
         
-                console.log(d1);
-                console.log(pTimeDifference[0]);
+                console.log("distance = " + d1);
+                console.log("time difference = " + pTimeDifference[0]);
                  eVelocity = calculator.getEstimatedVelocity(d1, pTimeDifference[0] / 1000);
-		console.log(eVelocity);
+		console.log("velocity = " + eVelocity);
 
             });
         });
