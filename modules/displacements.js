@@ -2,12 +2,14 @@ const db = require('../config/connection');
 const calculator = require('../scripts/calculator');
 
 process.on('message', (msg) => {
-    
-    //data preparation
-    const pgd = calculator.getDisplacement(msg.samples);
     const wave = msg.wave;
     const station = msg.station;
-    const datetime = new Date(msg.timestamp * 1000);
+    const datetime = msg.datetime;
+    var pgd;
+    //data preparation
+    if(wave == 0) pgd = calculator.getDisplacement(msg.va);
+    else pgd = calculator.getDisplacement(msg.nsa);
+   
     
     //prepare query
     const sql = "INSERT INTO Displacements (station, wave, datetime, pgd) VALUES (?,?,?,?)";
@@ -18,9 +20,12 @@ process.on('message', (msg) => {
         if (err) throw err;
         conn.query(sql, values, (err, res) => {
             if (err) throw err;
-            console.log("New PGD recorded at row " + res.insertId);    
+                if (res.affectedRows > 0) {
+                        process.send(res.insertId);
+                        conn.release();
+                        process.exit();
+                }
         });
-        conn.release();
     });
 });
 
