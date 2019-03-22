@@ -4,8 +4,8 @@ const child = require('child_process');
 
 exports.post_new_detection = (req, res) => {
 
-    var integration, epicenter, magnitude, newEvent, clearEvent, recordEvent; //child processes
-    var id, lat, long, mag, ts, wt, vAxis, nsAxis, ewAxis; //data variables
+    var detections, samples, parameters, newEvent, clearEvent, recordEvent; //child processes
+    var id, ts, wt, vAxis, nsAxis, ewAxis; //data variables
     var eventDone = 0; //boolean variables
 
     //VALIDATE DATA
@@ -27,66 +27,76 @@ exports.post_new_detection = (req, res) => {
     const detection = {
         sensor_id: id,
         wave_type: wt,
-        timestamp: ts,
+        datetime: ts,
         va: vAxis,
         ns: nsAxis,
         ew: ewAxis
     }
+    
+    samples = child.fork("./modules/samples.js");
+    samples.send(detection);
 
-    integration = child.fork("./modules/displacement.js");
-    integration.send(detection);
+    detections = child.fork("./modules/displacement.js");
+    detections.send(detection);
 
-    integration.on('error', (err) => {
+    detections.on('error', (err) => {
         if (err) throw err;
     });
-    integration.on('exit', () => {
-        console.log("Integration process terminated.");
-    });
 
-
-    db.getConnection((err, conn) => {
-        if (err) throw err;
-        //VALIDATION OF EARTHQUAKE
-        conn.query('SELECT COUNT (DISTINCT sensor_id) AS count FROM Displacement_Record WHERE wave_type = 1 ORDER BY timestamp ASC', (err, res, fields) => {
+    detections.on('exit', () => {
+        console.log("detection data preparation done");
+        db.getConnection((err, conn) => {
             if (err) throw err;
-            if (res[0].count >= 3) { //verified event
-                parameters = child.fork("./modules/parameters.js");
-                /*
-                epicenter.on('message', (latitude, longitude) => {
-                    lat = latitude;
-                    long = longitude;
-                });
-                magnitude.on('message', (magnitude) => {
-                    mag = magnitude;
-                });
+            //VALIDATION OF EARTHQUAKE
+            conn.query('SELECT COUNT (DISTINCT sensor_id) AS count FROM Displacements WHERE wave_type = 1 ORDER BY timestamp ASC; SELECT COUNT (DISTINCT sensor_id) AS count FROM Displacements WHERE wave_type = 0 ORDER BY timestamp ASC; ', (err, res) => {
+                if (err) throw err;
+                if (res[0].count >= 3 && res[1] >=3) { 
+                    console.log("New Event Verified! Starting Calculations.");
 
-                //SEND EVENT ALERT/UPDATE
-                const new_event = {
-                    sensor_id: id,
-                    latitude: lat,
-                    longitude: long,
-                    magnitude: mag,
-                    timestamp: ts
+                    //verified event
+                    
+                    parameters = child.fork("./modules/parameters.js");
+                    parameters.on("message", (message) => {
+                        console.log(message);
+                    })
+                    /*
+                    
+                    //SEND EVENT ALERT/UPDATE
+                    const new_event = {
+                        sensor_id: id,
+                        latitude: lat,
+                        longitude: long,
+                        magnitude: mag,
+                        timestamp: ts
+                    }
+    
+                    newEvent = child.fork("./modules/newEvent.js");
+                    newEvent.send(new_event);
+    
+                    //CHECK IF EVENT IS DONE, RECORD AND CLEAR IF DONE
+                    if (eventDone == 1) {
+                        recordEvent = child.fork("./modules/clearEvent.js");
+                        process.on('message', (msg) => {
+                            if (msg == 200) {
+                                clearEvent = child.fork("./modules/clearEvent.js");     
+                            }
+                        });
+                    }*/
+                } else {
+                    if(res[0].count >= 3 && res[1].count < 3) {
+
+                    } 
+                    //unverified event try to calculate magnitude and epicenter
+                    console.log("Triggered sensors less than 3, event not verified! Logging as false trigger.");
+                    //LOG to falsetriggers.txt
                 }
-
-                newEvent = child.fork("./modules/newEvent.js");
-                newEvent.send(new_event);
-
-                //CHECK IF EVENT IS DONE, RECORD AND CLEAR IF DONE
-                if (eventDone == 1) {
-                    recordEvent = child.fork("./modules/clearEvent.js");
-                    process.on('message', (msg) => {
-                        if (msg == 200) {
-                            clearEvent = child.fork("./modules/clearEvent.js");     
-                        }
-                    });
-                }*/
-            } else { //unverified event try to calculate magnitude and epicenter
-                console.log("Triggered sensors less than 3, event not verified! Logging as false trigger.");
-                //LOG to falsetriggers.txt
-            }
+            });
         });
+
     });
+
+
+    
 }
 function validateDetections(detected) {
     const schema = {

@@ -1,82 +1,84 @@
 var async = require("async");
 const db = require('../config/connection');
-const Joi = require('joi');
-const mysql = require('mysql');
-const calculator = require('../scripts/calculator');
+const child = require('child_process');
 var i;
 //prepare query
-var sql1 = "SELECT DISTINCT sensor_id, timestamp FROM Displacement_Record WHERE wave_type = 1 ORDER BY timestamp ASC";
-var sql2 = "SELECT timestamp FROM Displacement_Record WHERE wave_type = 0 AND sensor_id = ?";
-var sql3 = "SELECT latitude, longitude FROM Sensor_Record WHERE sensor_id = ?";
-var i = 0, sensor = [], pTime = [], sTime = [], location = [], pTimestamp = [], sTimestamp = [], pTimeDifference = [], sTimeDifference = [];
-var sensorPromise, timestampPromise;
+let sql1 = "SELECT TOP 3 DISTINCT station, datetime FROM Displacements WHERE wave_type = 0 ORDER BY datetime ASC";
+let sql2 = "SELECT TOP 3 pgd, datetime FROM Displacement_Record WHERE wave_type = 1 AND station = ? ORDER BY datetime ASC";
+let sql3 = "SELECT latitude, longitude FROM Stations WHERE station = ?";
+var i = 0, sensor = [], pTime = [], sTime = [], location = [], pTimestamp = [];
 //connect to database
 db.getConnection((err, conn) => {
     if (err) throw err;
-    conn.query(sql1, function (err, res, fields) {
-        if (err) throw err;
-        for (i = 0; i < res.length; i++) {
-            sensor[i] = res[i].sensor_id;
-            pTimestamp[i] = res[i].timestamp;
-        }
-        let getTimePromise = new Promise(function (resolve, reject) {
-            async.forEachOfSeries(sensor, function (id, index, callback) {
-                sql2 = mysql.format(sql2, id);
-                conn.query(sql2, function (err, result) {
-                    if (err) return reject(err);
-                    sTime[index] = result[0].timestamp;
-                    if (index == 2) resolve(sTime);
-                    callback();
-                });
-            }, function done() {
-                console.log("Done");
-            });
-        });
-        let getSensorPromise = new Promise(function (resolve, reject) {
-            async.forEachOfSeries(sensor, function (id, index, callback) {
-                conn.query(sql3, id, function (err, result) {
-                    if (err) {
-                        return reject(err);
-                    }
-	console.log(result);
-                    location[index] = [result[0].latitude, result[0].longitude];
-                    if (index == 2) resolve(location);
-                    callback();
-                });
-            }, function done() {
-                console.log("Done");
-            });
-        });
-        getSensorPromise.then(function (sensor) {
-            getTimePromise.then(function (time) {
-                var sTimestamp = time;
-                var sensorPromise = sensor;
-		console.log(sensorPromise[0]);
-		console.log(sensorPromise[1]);
-                var d1 = calculator.getCoordinateDistance(sensorPromise[0], sensorPromise[1]);
-                var d2 = calculator.getCoordinateDistance(sensorPromise[0], sensorPromise[2]);
-                var d3 = calculator.getCoordinateDistance(sensorPromise[1], sensorPromise[2]);
-        
-                for (i = 0; i < res.length; i++) {
-                    pTime[i] = convertToTime(pTimestamp[i]);
-                    sTime[i] = convertToTime(sTimestamp[i]);
-                }
-        
-                pTimeDifference[0] = calculator.getTimeDifference(pTime[0], pTime[1]);
-                sTimeDifference[0] = calculator.getTimeDifference(sTime[0], sTime[1]);
-                pTimeDifference[1] = calculator.getTimeDifference(pTime[0], pTime[2]);
-                sTimeDifference[1] = calculator.getTimeDifference(sTime[0], sTime[2]);
-                pTimeDifference[2] = calculator.getTimeDifference(pTime[1], pTime[2]);
-                sTimeDifference[2] = calculator.getTimeDifference(sTime[1], sTime[2]);
-        
-                console.log("distance = " + d1);
-                console.log("time difference = " + pTimeDifference[0]);
-                 eVelocity = calculator.getEstimatedVelocity(d1, pTimeDifference[0] / 1000);
-		console.log("velocity = " + eVelocity);
 
-            });
+    let PWaveFulfilled = new Promise((resolve, reject) => {
+        var station = [], p_at = [];
+        conn.query(sql1, (err, res) => {
+            if (err) throw err;
+            if (res[0].length < 3) {
+                return reject("Not Enough Data!");
+            } else {
+                for (i = 0; i < res[0].length; i++) {
+                    station[i] = res[0][i].station;
+                    p_at[i] = res[1][i].datetime;
+                }
+                resolve([station, p_at]);
+            }
         });
     });
+
+    PWaveFulfilled.then((promise) => {
+        let station_id = promise[0];
+        let p_at = promise[1];
+        let dataPrepFulfilled = new Promise((resolve, reject) => {
+            async.forEachOfSeries(station_id, (id, index, callback) => {
+                sql2 = mysql.format(sql2, id);
+                sql3 = mysql.format(sql3, id);
+                conn.query(sql2, sql3, (err, res) => {
+                    if (err) return reject(err);
+                    s_at[index] = res[0].datetime;
+                    pgd[index] = res[0].pgd;
+                    station_latitude[index] = res[1].latitude;
+                    station_longitide[index] = res[1].longitude;
+                    if (index == 2) {
+                        resolve([s_at, pgd, station_latitude, station_longitide]);
+                    }
+                    callback();
+                });
+            }, function done() {
+                console.log("Data Preparation Fulfilled.");
+            });
+        });
+        
+        dataPrepFulfilled.then((promise) => {
+            let s_at = promise[0];
+            let pgd = promise[1];
+            var station = [[],[]], at = [[],[]];
+            for (i = 0; i <= 2; i++){
+                station[i] = [promise[2], promise[3]];
+                at[i] = [p_at[i], s_at[i]];
+            }
+
+            const parameters = {
+                stations: station,
+                ats: at,
+                pgds: pgd, 
+            }
+
+            let newEvent = child.fork("./information");
+            newEvent.send(parameters);
+
+            newEvent.on('message', (msg) => {
+                process.send(msg);
+            })
+
+        });
+
+
+    }).catch((e) => {
+        console.log(e);
+    });
+
     conn.release();
 });
 function convertToTime(timestamp) {
