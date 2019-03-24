@@ -1,96 +1,75 @@
 const Joi = require('joi');
-const db = require('../../config/connection');
 const child = require('child_process');
+
 exports.post_new_detection = (req, res) => {
-    var detections, samples, parameters, newEvent, clearEvent, recordEvent; //child processes
-    var id, ts, wt, vAxis, nsAxis, ewAxis; //data variables
-    var eventDone = 0; //boolean variables
     //VALIDATE DATA
     const { error } = validateDetections(req.body);
     if (error) {
         res.status(400).send("Error: " + error.details[0].message);
         return;
     }
-    res.send("POST Request Successful");
-    id = req.body.station;
-    wt = req.body.wave;
-    ts = new Date(req.body.timestamp * 1000);
-    date = ts.toISOString().replace('Z', '');
-    vAxis = req.body.va;
-    nsAxis = req.body.nsa;
-    ewAxis = req.body.ewa;
-    //START DATA FOR ANALYSIS
-    const detection = {
-        station: id,
-        wave: wt,
-        datetime: date,
-        va: vAxis,
-        nsa: nsAxis,
-        ewa: ewAxis
-    }
-    samples = child.fork("./modules/samples.js");
-    samples.send(detection);
-    samples.on('message', (msg) => {
-        console.log("New samples recorded into row " + msg);
-    });
-    samples.on('exit', () => {
-        console.log("Samples Process Exited");
-    });
-    detections = child.fork("./modules/displacement.js");
-    detections.send(detection);
-    detections.on('error', (err) => {
-        if (err) throw err;
-    });
-    detections.on('exit', () => {
-        console.log("Displacement Process Exited");
-    });
 
-    detections.on('message', (msg) => {
-        console.log("NEW PGD recorded into row " + msg);
-        db.getConnection((err, conn) => {
+
+    let idcheck = child.fork("./modules/idcheck.js");
+    idcheck.on('message', (msg) => {
+        //PREPARE DATA FOR ANALYSIS
+        const event_id = msg;
+        const detection = {
+            event: event_id,
+            station: req.body.station,
+            wave: req.body.wave,
+            datetime: new Date(req.body.timestamp * 1000).toISOString().replace('Z', ''),
+            va: req.body.va,
+            nsa: req.body.nsa,
+            ewa: req.body.ewa
+        }
+
+        //SAVE SAMPLES TO DB USING EVENT ID
+        let triggers = child.fork("./modules/triggers.js");
+        triggers.send(detection);
+        triggers.on('error', (err) => {
             if (err) throw err;
-            //VALIDATION OF EARTHQUAKE
-            conn.query('SELECT COUNT (DISTINCT station) AS count FROM Displacements WHERE wave = 1 ORDER BY datetime ASC; SELECT COUNT (DISTINCT station) AS count FROM Displacements WHEre wave = 0 ORDER BY datetime ASC', (err, res) => {
-                if (err) throw err;
-            if (res[0][0].count >= 3 && res[0][1].count >= 3) {
-                console.log("New Event Verified! Starting Calculations.");
-
-                //verified event
-
-                parameters = child.fork("./modules/parameters.js");
-                parameters.on("message", (message) => {
-                    console.log(message);
-                })
-                /*
-                
-                //SEND EVENT ALERT/UPDATE
-                const new_event = {
-                    sensor_id: id,
-                    latitude: lat,
-                    longitude: long,
-                    magnitude: mag,
-                    timestamp: ts
-                }
- 
-                newEvent = child.fork("./modules/newEvent.js");
-                newEvent.send(new_event);
- 
-                //CHECK IF EVENT IS DONE, RECORD AND CLEAR IF DONE
-                if (eventDone == 1) {
-                    recordEvent = child.fork("./modules/clearEvent.js");
-                                                }
-                    });
-                }*/
-            } else {
-                if (res[0].count >= 3 && res[1].count < 3) {
-                }
-                //unverified event try to calculate magnitude and epicenter
-                console.log("Triggered sensors less than 3, event not verified! Logging as false trigger.");
-                //LOG to falsetriggers.txt
-            }
         });
+        triggers.on('exit', () => {
+            console.log("Samples Process Exited");
+            //CALCULATE AND SAVE PGD TO DB
+            let displacements = child.fork("./modules/displacements.js");
+            displacements.send(detection);
+            displacements.on('exit', () => {
+
+                //CHECK IF DATA >=3
+                let verify = child.fork("../modules/verify");
+                verify.on('message', (msg) => {
+                    if (msg.p >= 3 && msg.s >= 3) {
+                        res.status(201).send("New trigger recorded, event was verified!");
+                        //EVENT IS VERIFIED START PARAMETER CALCULATIONS
+                        parameters = child.fork("./modules/parameters.js");
+                        parameters.on("message", (msg) => {
+                            console.log(msg);
+                            //SEND EVENT ALERT/UPDATE
+                            /*
+                            const alert_update = {
+                                latitude: lat,
+                                longitude: long,
+                                magnitude: mag,
+                                timestamp: ts
+                            }
+                            alert = child.fork("./modules/alerts.js");
+                            alert.send(alert_update);
+                            */
+                        });
+                    } else {
+                        res.status(200).send("New trigger event not yet verified.");
+                    }
+                })
+            });
+            displacements.on('error', (err) => {
+                if (err) throw err;
+            });
+        });
+
     });
-});
+
     
 }
 function validateDetections(detected) {

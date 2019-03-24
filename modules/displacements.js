@@ -21,7 +21,6 @@ process.on('message', (msg) => {
         conn.query(sql, values, (err, res) => {
             if (err) throw err;
                 if (res.affectedRows > 0) {
-                        process.send(res.insertId);
                         conn.release();
                         process.exit();
                 }
