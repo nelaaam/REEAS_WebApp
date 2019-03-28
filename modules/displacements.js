@@ -2,6 +2,7 @@ const db = require('../config/connection');
 const calculator = require('../scripts/calculator');
 
 process.on('message', (msg) => {
+    const event = msg.event_id;
     const wave = msg.wave;
     const station = msg.station;
     const datetime = msg.datetime;
@@ -12,8 +13,8 @@ process.on('message', (msg) => {
    
     
     //prepare query
-    const sql = "INSERT INTO Displacements (station, wave, datetime, pgd) VALUES (?,?,?,?)";
-    const values = [station, wave, datetime, pgd];
+    const sql = "INSERT INTO Displacements (event, station, wave, datetime, pgd) VALUES (?,?,?,?)";
+    const values = [event, station, wave, datetime, pgd];
 
     //connect to database
     db.getConnection((err, conn) => {

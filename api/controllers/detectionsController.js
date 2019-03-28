@@ -9,11 +9,11 @@ exports.post_new_detection = (req, res) => {
         return;
     }
 
-
     let idcheck = child.fork("./modules/idcheck.js");
     idcheck.on('message', (msg) => {
         //PREPARE DATA FOR ANALYSIS
         const event_id = msg;
+        console.log(event_id);
         const detection = {
             event: event_id,
             station: req.body.station,
@@ -36,30 +36,37 @@ exports.post_new_detection = (req, res) => {
             let displacements = child.fork("./modules/displacements.js");
             displacements.send(detection);
             displacements.on('exit', () => {
-
+                console.log(event_id);
                 //CHECK IF DATA >=3
-                let verify = child.fork("../modules/verify");
+                let verify = child.fork("./modules/verify");
+                verify.send(detection.event);
                 verify.on('message', (msg) => {
                     if (msg.p >= 3 && msg.s >= 3) {
                         res.status(201).send("New trigger recorded, event was verified!");
+                        updateEvent = child.fork('../../modules/updateEvent');
+                        updateEvent.send({event: event_id, status: "Earthquake"});
                         //EVENT IS VERIFIED START PARAMETER CALCULATIONS
                         parameters = child.fork("./modules/parameters.js");
+                        parameters.send(detection.event);
                         parameters.on("message", (msg) => {
                             console.log(msg);
-                            //SEND EVENT ALERT/UPDATE
-                            /*
-                            const alert_update = {
-                                latitude: lat,
-                                longitude: long,
-                                magnitude: mag,
-                                timestamp: ts
+                            var response = {
+                                status: 200,
+                                message: "This detection was verified as an earthquake.",
+                                data: msg
                             }
-                            alert = child.fork("./modules/alerts.js");
-                            alert.send(alert_update);
-                            */
+                            res.status(200).send(response);
+
+                            alerts = child.fork("./modules/alerts.js");
+                            alerts.send(msg);
+                            
                         });
                     } else {
-                        res.status(200).send("New trigger event not yet verified.");
+                        var response = {
+                            status: 200,
+                            message: "This detection is not yet verified",
+                        }
+                        res.status(200).send(response);
                     }
                 })
             });
@@ -69,8 +76,6 @@ exports.post_new_detection = (req, res) => {
         });
 
     });
-
-    
 }
 function validateDetections(detected) {
     const schema = {

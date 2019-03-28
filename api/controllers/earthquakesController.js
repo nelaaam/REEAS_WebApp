@@ -4,7 +4,7 @@ var payload;
 exports.get_all = (req, response) => {
     db.getConnection((err, conn) => {
         if (err) throw err;
-        var query = "SELECT * FROM Events_Record ORDER BY event_id ASC";
+        var query = "SELECT * FROM Earthquakes ORDER BY earthquake ASC";
         conn.query(query, function (err, res, fields) {
             if (err) throw err;
             results = JSON.parse(JSON.stringify(res));
