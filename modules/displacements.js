@@ -2,18 +2,17 @@ const db = require('../config/connection');
 const calculator = require('../scripts/calculator');
 
 process.on('message', (msg) => {
-    const event = msg.event_id;
+    const event = msg.event;
     const wave = msg.wave;
     const station = msg.station;
     const datetime = msg.datetime;
     var pgd;
     //data preparation
     if(wave == 0) pgd = calculator.getDisplacement(msg.va);
-    else pgd = calculator.getDisplacement(msg.nsa);
+    else if(wave == 1) pgd = calculator.getDisplacement(msg.nsa);
    
-    
     //prepare query
-    const sql = "INSERT INTO Displacements (event, station, wave, datetime, pgd) VALUES (?,?,?,?)";
+    const sql = "INSERT INTO Displacements (event, station, wave, datetime, pgd) VALUES (?,?,?,?,?)";
     const values = [event, station, wave, datetime, pgd];
 
     //connect to database

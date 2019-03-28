@@ -90,7 +90,7 @@ process.on('message', (msg) => {
                 if (event_start == null) {
                     let minDistance = Math.min(...distance);
                     let earliestTime = Math.min(...p_at);
-                    event_start = new Date(earliestTime - ((minDistance / 6) * 1000));
+                    event_start = new Date(earliestTime - ((minDistance / 6) * 1000)).toISOString().replace('Z', '');
                 }
                 //Get Epicenter Coordinates
                 let epicenter = calculator.trilaterate(station[0], station[1], station[2], distance);
@@ -99,8 +99,6 @@ process.on('message', (msg) => {
                     if (data.status.code == 200) {
                         if (data.results.length > 0) {
                             var place = data.results[0];
-                            console.log(place.formatted);
-                            console.log(place.annotations.timezone.name);
                             const earthquake_information = {
                                 event: msg,
                                 datetime: event_start,

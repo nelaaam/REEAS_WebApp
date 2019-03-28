@@ -1,6 +1,7 @@
 const child = require('child_process');
+const Joi = require('joi');
 
-exports.update_sensor = (req, res) => {
+exports.update_station = (req, res) => {
     //VALIDATE DATA
     const { error } = validateDetections(req.body);
     if (error) {
@@ -8,13 +9,13 @@ exports.update_sensor = (req, res) => {
         return;
     }
     var sensor_data = {
-        station: req.station,
-        latitude: req.latitude,
-        longitude: req.longitude,
-        enabled: req.enabled
+        station: req.body.station,
+        latitude: req.body.latitude,
+        longitude: req.body.longitude,
+        enabled: req.body.enabled
     }
 
-    updates = child.fork('../../modules/updateSensor');
+    updates = child.fork('./modules/updateStation');
     updates.send(sensor_data);
     updates.on('message', (msg) => {
         res.status(200).send(msg);
@@ -32,4 +33,5 @@ function validateDetections(detected) {
     }
     return Joi.validate(detected, schema);
 }
+
 
