@@ -10,10 +10,10 @@ exports.post_new_detection = (req, res) => {
     }
 
     let idcheck = child.fork("./modules/idcheck.js");
+    idcheck.send({datetime: req.body.timestamp});
     idcheck.on('message', (msg) => {
         //PREPARE DATA FOR ANALYSIS
         const event_id = msg;
-        console.log(event_id);
         const detection = {
             event: event_id,
             station: req.body.station,
@@ -23,7 +23,6 @@ exports.post_new_detection = (req, res) => {
             nsa: req.body.nsa,
             ewa: req.body.ewa
         }
-
         //SAVE SAMPLES TO DB USING EVENT ID
         let triggers = child.fork("./modules/triggers.js");
         triggers.send(detection);
@@ -42,6 +41,7 @@ exports.post_new_detection = (req, res) => {
                     if (msg.p >= 3 && msg.s >= 3) {
                         updateEvent = child.fork('./modules/updateEvent');
                         updateEvent.send({event: event_id, status: "Earthquake"});
+                       
                         //EVENT IS VERIFIED START PARAMETER CALCULATIONS
                         parameters = child.fork("./modules/parameters.js");
                         parameters.send(detection.event);
@@ -63,6 +63,8 @@ exports.post_new_detection = (req, res) => {
                             message: "This detection is not yet verified",
                         }
                         res.status(200).send(response);
+                        updateEvent = child.fork('./modules/updateEvent');
+                        updateEvent.send({event: event_id, status: "Not Yet Verified"});
                     }
                 })
             });
@@ -84,3 +86,4 @@ function validateDetections(detected) {
     }
     return Joi.validate(detected, schema);
 }
+
