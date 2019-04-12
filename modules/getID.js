@@ -15,7 +15,8 @@ process.on('message', (msg) => {
                 current_event = res[0].event;
                 if (res[0].status == 'False Trigger') {
                     process.send(current_event + 1);
-                    endProcess;
+                    conn.release();
+                    process.exit();
                 } else if (res[0].status == 'Not Yet Verified') {
                     if ((now - last) >= 120000) {
                         new_event = current_event + 1;
@@ -23,12 +24,14 @@ process.on('message', (msg) => {
                         conn.query(sql4, [current_event, current_event], (err, res) => {
                             if (err) throw (err);
                             if (res.affectedRows > 0) {
-                                endProcess(conn);
+                                conn.release();
+                                process.exit();
                             }
                         });
                     } else {
                         process.send(current_event);
-                        endProcess(conn);
+                        conn.release();
+                        process.exit();
                     }
                 } else if (res[0].status == "Earthquake") {
                     conn.query(sql2, (err, res) => {
@@ -36,31 +39,26 @@ process.on('message', (msg) => {
                         if (res[0].length > 0 && res[1].length > 0) {
                             if (res[0][0].event > res[1][0].event) last_event = res[0][0].event;
                             else last_event = res[1][0].event;
-                        } else if (res[0].length > 0)  last_event = res[0][0].event;
+                        } else if (res[0].length > 0) last_event = res[0][0].event;
                         else if (res[1].length > 0) last_event = res[1][0].event;
                         else {
                             process.send(1);
-                            endProcess(conn);
                         }
-                        if(current_event == last_event) {
+                        if (current_event == last_event) {
                             new_event = last_event + 1;
                             process.send(new_event);
-                            endProcess(conn);
                         } else {
                             process.send(current_event);
-                            endProcess(conn);
                         }
+                        conn.release();
+                        process.exit();
                     });
                 }
             } else {
                 process.send(1);
-                endProcess(conn);
+                conn.release();
+                process.exit();
             }
         });
     });
 });
-
-function endProcess(conn) {
-    conn.release();
-    process.exit();
-}

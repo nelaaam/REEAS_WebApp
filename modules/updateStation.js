@@ -9,21 +9,35 @@ process.on('message', (msg) => {
         var enabled = msg.enabled;
         conn.query(sql1, station, (err, res) => {
             if (err) throw err;
-            if (latitude != null || longitude != null) {
-                if (latitude != null && latitude != res[0].latitude) {
-                    latitude = res[0].latitude;
-                }
-                if (longitude != null && longitude != res[0].longitude) {
-                    longitude = res[0].longitude;
-                }
-                var sql2 = "UPDATE Stations SET latitude =? , longitude = ?, enabled = ? WHERE station = ?;";
-                var values = [latitude, longitude, enabled, station];
-                updateSensor(conn, sql2, values);
+            if (res.length < 1){
+                var sql2 = "INSERT INTO Stations (station, datetime, latitude, longitude, enabled) VALUES (?, ?, ?, ?, ?);";
+                values = [station, new Date(), latitude, longitude, enabled];
+                conn.query(sql2, values, (err, res) => {
+                    if (err) throw err;
+                    if (res.affectedRows > 1) {
+                        process.send({status: 202, message: "Successfully added new station"});
+                        conn.release();
+                        process.exit();
+                    }
+                });
             } else {
-                var sql2 = "UPDATE Stations SET enabled=? WHERE station = ?;";
-                var values = [enabled, station];
-                updateSensor(conn, sql2, values);
+                if (latitude != null || longitude != null) {
+                    if (latitude != null && latitude != res[0].latitude) {
+                        latitude = res[0].latitude;
+                    }
+                    if (longitude != null && longitude != res[0].longitude) {
+                        longitude = res[0].longitude;
+                    }
+                    var sql2 = "UPDATE Stations SET datetime = ? , latitude =? , longitude = ?, enabled = ? WHERE station = ?;";
+                    var values = [new Date(), latitude, longitude, enabled, station];
+                    updateSensor(conn, sql2, values);
+                } else {
+                    var sql2 = "UPDATE Stations SET datetime = ? , enabled=? WHERE station = ?;";
+                    var values = [new Date(), enabled, station];
+                    updateSensor(conn, sql2, values);
+                }
             }
+            
         });
     });
 })
@@ -36,6 +50,8 @@ function updateSensor(connection, query, values) {
             process.send({ status: 201, message: "Successfully connected to server." });
             connection.release();
             process.exit();
+        } else {
+            process.send({status: 404, message: "Station not found!"});
         }
     });
 }
