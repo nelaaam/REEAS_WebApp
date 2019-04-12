@@ -9,7 +9,6 @@ process.on('message', (msg) => {
         conn.query(sql1, msg.event, (err, res) => {
             if (err) throw err;
             var sample = res[0].sample;
-            console.log(msg.event, msg.status);
             if (res[0].status == "False Trigger") {
                 process.send(msg.event + 1);
             } else {
@@ -47,10 +46,7 @@ function checkAlerts(conn, event, old_sample) {
                 conn.query('INSERT INTO Earthquakes (event, datetime, latitude, longitude, magnitude, location) VALUES (?,?,?,?,?,?)', values, (err, res) => {
                     if (err) throw err;
                     if (res.affectedRows > 0) {
-		        let record = child.fork("./modules/recordEvent");
-                        record.on('exit', () => {
-                            console.log("Notification is sent");
-                        });
+                        process.send("Notify");
                         conn.release();
                         process.exit();
                     }

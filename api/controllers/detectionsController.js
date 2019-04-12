@@ -1,5 +1,13 @@
 const Joi = require('joi');
 const child = require('child_process');
+const module_getID= "./modules/getID";
+const module_saveEvent = "./modules/saveEvent";
+const module_getPGD = "./modules/getPGD";
+const module_getInformation = "./modules/getInformation";
+const module_getCount = "./modules/getCount";
+const module_sendNotification = "./modules/sendNotification";
+const module_updateStatus = "./modules/updateStatus";
+const module_sendAlert = "./modules/sendAlert";
 
 exports.post_new_detection = (req, res) => {
     //VALIDATE DATA
@@ -11,11 +19,11 @@ exports.post_new_detection = (req, res) => {
         res.status(200).send({"status": 200, "message": "Successful"});
     }
 
-    let idcheck = child.fork("./modules/idcheck.js");
-    idcheck.send({datetime: req.body.timestamp});
-    idcheck.on('message', (msg) => {
+    let id = child.fork(module_getID);
+    id.send({datetime: req.body.timestamp});
+    id.on('message', (eventID) => {
         //PREPARE DATA FOR ANALYSIS
-        const event_id = msg;
+        const event_id = eventID;
         const detection = {
             event: event_id,
             station: req.body.station,
@@ -26,39 +34,50 @@ exports.post_new_detection = (req, res) => {
             ewa: req.body.ewa
         }
         //SAVE SAMPLES TO DB USING EVENT ID
-        let triggers = child.fork("./modules/triggers.js");
-        triggers.send(detection);
-        triggers.on('error', (err) => {
+        let event = child.fork(module_saveEvent);
+        event.send(detection);
+        event.on('error', (err) => {
             if (err) throw err;
         });
-        triggers.on('exit', () => {
+        event.on('exit', () => {
             //CALCULATE AND SAVE PGD TO DB
-            let displacements = child.fork("./modules/displacements.js");
-            displacements.send(detection);
-            displacements.on('exit', () => {
-                //CHECK IF DATA >=3
-                let verify = child.fork("./modules/verify");
+            let pgd = child.fork(module_getPGD);
+            pgd.send(detection);
+            pgd.on('exit', () => {
+                //VERIFY EVENTS THROUGH OTHER DATA
+                let verify = child.fork(module_getCount);
                 verify.send(detection.event);
-                verify.on('message', (msg) => {
-                    if (msg.p >= 3 && msg.s >= 3) {
-                        updateEvent = child.fork('./modules/updateEvent');
-                        updateEvent.send({event: event_id, status: "Earthquake"});
-                       
-                        //EVENT IS VERIFIED START PARAMETER CALCULATIONS
-                        parameters = child.fork("./modules/parameters.js");
-                        parameters.send(detection.event);
-                        parameters.on("message", (msg) => {
-                            alerts = child.fork("./modules/alerts.js");
-                            alerts.send(msg);
-                            
+                verify.on('message', (count) => {
+                    if (count.p >= 3 && count.s >= 3) {
+                        let status = child.fork(module_updateStatus);
+                        status.send({event: event_id, status: "Earthquake"});
+                        status.on("message", (eventStatus) => {
+                            if (eventStatus.data == "Send Notification") {
+                                let notification = child.fork(module_sendNotification);
+                                notification.on('exit', () => {
+                                    console.log('Notification sent.')
+                                });
+                            }
+                        });
+                        //EVENT IS VERIFIED START CALCULATIONS
+                        let information = child.fork(module_getInformation);
+                        information.send(detection.event);
+                        information.on("message", (eartquakeInformation) => {
+                            let alert = child.fork(module_sendAlert);
+                            alert.send(eartquakeInformation);
                         });
                     } else {
-                        updateEvent = child.fork('./modules/updateEvent');
-                        updateEvent.send({event: event_id, status: "Not Yet Verified"});
+                        let status = child.fork(module_updateStatus);
+                        status.send({event: event_id, status: "Not Yet Verified"});
+                        status.on("message", (eventStatus) => {
+                            if (eventStatus == "False Trigger") {
+                                console.log("Event " + eventStatus.event_id + eventStatus.data);
+                            }
+                        });
                     }
                 })
             });
-            displacements.on('error', (err) => {
+            pgd.on('error', (err) => {
                 if (err) throw err;
             });
         });

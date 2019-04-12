@@ -4,7 +4,7 @@
   "description": "reeas web application",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "mocha || true"
   },
   "repository": {
     "type": "git",
@@ -32,6 +32,8 @@
     "promise": "^8.0.2"
   },
   "devDependencies": {
-    "http-proxy-middleware": "^0.19.1"
+    "chai": "^4.2.0",
+    "http-proxy-middleware": "^0.19.1",
+    "mocha": "^6.1.3"
   }
 }
