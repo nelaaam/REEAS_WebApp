@@ -13,8 +13,6 @@ process.on('message', (msg) => {
                 last = new Date(res[0].datetime);
                 now = new Date(msg.datetime * 1000);
                 current_event = res[0].event;
-                console.log(last, now);
-                console.log(now - last);
                 if (res[0].status == 'False Trigger') {
                     process.send(current_event + 1);
                     endProcess;

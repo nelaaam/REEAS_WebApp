@@ -7,6 +7,8 @@ exports.post_new_detection = (req, res) => {
     if (error) {
         res.status(400).send("Error: " + error.details[0].message);
         return;
+    } else {
+        res.status(200).send({"status": 200, "message": "Successful"});
     }
 
     let idcheck = child.fork("./modules/idcheck.js");
@@ -46,23 +48,11 @@ exports.post_new_detection = (req, res) => {
                         parameters = child.fork("./modules/parameters.js");
                         parameters.send(detection.event);
                         parameters.on("message", (msg) => {
-                            var response = {
-                                status: 200,
-                                message: "This detection was verified as an earthquake.",
-                                data: msg
-                            }
-                            res.status(200).send(response);
-
                             alerts = child.fork("./modules/alerts.js");
                             alerts.send(msg);
                             
                         });
                     } else {
-                        var response = {
-                            status: 200,
-                            message: "This detection is not yet verified",
-                        }
-                        res.status(200).send(response);
                         updateEvent = child.fork('./modules/updateEvent');
                         updateEvent.send({event: event_id, status: "Not Yet Verified"});
                     }

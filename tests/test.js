@@ -1,3 +1,4 @@
+console.log("Test Parameter Calculation Module");
 const calculator = require('../scripts/calculator');
 
 const raw_data = [
