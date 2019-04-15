@@ -17,7 +17,7 @@ process.on('message', (msg) => {
                     process.send(current_event + 1);
                     conn.release();
                     process.exit();
-                } else if (res[0].status == 'Not Yet Verified') {
+                } else if (res[0].status != 'Earthquake') {
                     if ((now - last) >= 120000) {
                         new_event = current_event + 1;
                         process.send(new_event);
