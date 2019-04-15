@@ -1,41 +1,18 @@
 
+Data was set.
+0
+Updating Station
 [32m[nodemon] restarting due to changes...[39m
 [32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
 [32m[nodemon] restarting due to changes...[39m
 [32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
 Listening on port 3001
+{ status: 201, message: 'Successfully connected to server.' }
 [32m[nodemon] restarting due to changes...[39m
 [32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
 [32m[nodemon] restarting due to changes...[39m
 [32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
 Listening on port 3001
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-Listening on port 3001
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-Listening on port 3001
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-Listening on port 3001
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-Listening on port 3001
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-Listening on port 3001
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-[32m[nodemon] restarting due to changes...[39m
-[32m[nodemon] starting `node /home/nelamartino/reeas/server.js`[39m
-Listening on port 3001
+{ status: 201, message: 'Successfully connected to server.' }
+SENDING
+{ status: 202, message: 'Successfully added new station' }

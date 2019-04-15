@@ -7,7 +7,6 @@ var Station = function (lat, lon, dist) {
     this.lat = lat
     this.lon = lon
     this.dist = dist
-
     return this
 }
 
@@ -54,7 +53,12 @@ module.exports = {
         return Math.max(...a2p) / 1000;
     },
     getMagnitude: function (peak_amplitude, distance) {
-        magnitude = Math.log10(peak_amplitude) + 2.56 * Math.log10(distance) - 1.67;
+        //magnitude = Math.log10(peak_amplitude) + 2.56 * Math.log10(distance) - 1.67;
+        if(distance < 200) {
+            magnitude = Math.log10(peak_amplitude) + 1.6 * Math.log10(100) - 0.15;
+        } else {
+            magnitude = Math.log10(peak_amplitude) + 3.0 * Math.log10(distance) - 3.38;
+        }
         return magnitude;
     },
     getDiffInSeconds: function (t2, t1) {
@@ -150,6 +154,31 @@ module.exports = {
     
         return [lat, lon]
     
+    }, 
+    getEventStart: function(earliestTime, minDistance) {
+        return new Date(earliestTime - ((minDistance / 6) * 1000));
+    },
+    getAccelerationFromG: function(data) {
+        var acceleration = [], i;
+        for(i = 0; i < data.length; i++){
+            acceleration[i] = data[i] / 0.0000167081378; //nM per sec
+        }
+        return acceleration;
+    },
+    getVelocityFromAcceleration: function(data) {
+        var vel = [0, 0];
+        var acc = [0, 0];
+        var pos = [0, 0];
+        var ap = [];
+        for (i = 0; i < data.length; i++) {
+            acc[1] = data[i];
+            vel[1] = vel[0] + acc[0] * 0.025 + ((acc[1] - acc[0]) / 2) * 0.025;
+            ap[i] = vel[1];
+            acc[0] = acc[1];
+            vel[0] = vel[1];
+        }
+        return ap;
     }
+    
 }
 

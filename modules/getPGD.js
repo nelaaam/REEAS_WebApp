@@ -8,8 +8,8 @@ process.on('message', (msg) => {
     const datetime = msg.datetime;
     var pgd;
     //data preparation
-    if(wave == 0) pgd = calculator.getDisplacement(msg.va);
-    else if(wave == 1) pgd = calculator.getDisplacement(msg.nsa);
+    if(wave == 0) pgd = calculator.getDisplacementFromVelocity(msg.va);
+    else if(wave == 1) pgd = calculator.getDisplacementFromVelocity(msg.nsa);
    
     //prepare query
     const sql = "INSERT INTO Displacements (event, station, wave, datetime, pgd) VALUES (?,?,?,?,?)";

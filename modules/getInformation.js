@@ -50,7 +50,7 @@ process.on('message', (msg) => {
                         station_latitude[index] = res[1][0].latitude;
                         station_longitude[index] = res[1][0].longitude;
                         if (index == 2) {
-                            let promise = [s_at, pgd, station_latitude, station_longitude];
+                            let promise = [p_at, s_at, pgd, station_latitude, station_longitude];
                             resolve(promise);
                         }
                         asyncCallback();
@@ -61,8 +61,13 @@ process.on('message', (msg) => {
             });
 
             dataPrepFulfilled.then((promise) => {
-                let s_at = promise[0];
-                let pgd = promise[1];
+                let p_at = promise[0];
+                let s_at = promise[1];
+                let pgd = promise[2];
+                for(i = 0; i < promise[0].length; i++){
+                    p_at[i] = getTimeFrTimestamp(promise[0][i]);
+                    s_at[i] = getTimeFrTimestamp(promise[1][i]);
+                }
                 var station = [[], []], at = [[], []];
                 for (i = 0; i <= 2; i++) {
                     station[i] = [promise[2][i], promise[3][i]];
@@ -73,7 +78,7 @@ process.on('message', (msg) => {
                 const PGD = Math.max(...pgd);
                 for (var i = 0; i < 3; i++) {
                     for (var j = 0; j < 2; j++) {
-                        ATs[i][j] = getTimeFrTimestamp(at[i][j]);
+                        ATs[i][j] = at[i][j];
                     }
                 }
                 //GET S-P
@@ -89,7 +94,7 @@ process.on('message', (msg) => {
                 if (event_start == null) {
                     let minDistance = Math.min(...distance);
                     let earliestTime = Math.min(...p_at);
-                    event_start = new Date(earliestTime - ((minDistance / 6) * 1000)).toISOString().replace('Z', '');
+                    event_start = calculator.getEventStart(earliestTime, minDistance);
                 }
                 //Get Epicenter Coordinates
                 let epicenter = calculator.trilaterate(station[0], station[1], station[2], distance);
