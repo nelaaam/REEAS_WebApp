@@ -10,6 +10,7 @@ exports.update_station = (req, res) => {
     }
     var sensor_data = {
         station: req.body.station,
+        datetime: new Date(),
         latitude: req.body.latitude,
         longitude: req.body.longitude,
         enabled: req.body.enabled
@@ -26,6 +27,7 @@ exports.update_station = (req, res) => {
 function validateDetections(detected) {
     const schema = {
         station: Joi.string().required(),
+        datetime: Joi.date(),
         latitude: Joi.number().precision(5),
         longitude: Joi.number().precision(5),
         enabled: Joi.number().required().min(0).max(1),

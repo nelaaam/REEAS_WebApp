@@ -1,1 +1,42 @@
 
+/home/nelamartino/reeas/node_modules/mysql/lib/protocol/Parser.js:80
+        throw err; // Rethrow non-MySQL errors
+        ^
+
+TypeError: (intermediate value).toISOString.replace is not a function
+    at db.getConnection (/home/nelamartino/reeas/modules/updateStation.js:7:61)
+    at Handshake.onConnect (/home/nelamartino/reeas/node_modules/mysql/lib/Pool.js:64:7)
+    at Handshake.<anonymous> (/home/nelamartino/reeas/node_modules/mysql/lib/Connection.js:502:10)
+    at Handshake._callback (/home/nelamartino/reeas/node_modules/mysql/lib/Connection.js:468:16)
+    at Handshake.Sequence.end (/home/nelamartino/reeas/node_modules/mysql/lib/protocol/sequences/Sequence.js:83:24)
+    at Handshake.Sequence.OkPacket (/home/nelamartino/reeas/node_modules/mysql/lib/protocol/sequences/Sequence.js:92:8)
+    at Protocol._parsePacket (/home/nelamartino/reeas/node_modules/mysql/lib/protocol/Protocol.js:278:23)
+    at Parser.write (/home/nelamartino/reeas/node_modules/mysql/lib/protocol/Parser.js:76:12)
+    at Protocol.write (/home/nelamartino/reeas/node_modules/mysql/lib/protocol/Protocol.js:38:16)
+    at Socket.<anonymous> (/home/nelamartino/reeas/node_modules/mysql/lib/Connection.js:91:28)
+internal/child_process.js:372
+    throw errnoException(err, 'spawn');
+    ^
+
+Error: spawn ENOMEM
+    at ChildProcess.spawn (internal/child_process.js:372:11)
+    at spawn (child_process.js:559:9)
+    at Object.fork (child_process.js:113:10)
+    at Timeout.checkStations [as _onTimeout] (/home/nelamartino/reeas/modules/checkStation.js:9:24)
+    at listOnTimeout (timers.js:327:15)
+    at processTimers (timers.js:271:5)
+internal/modules/cjs/loader.js:615
+    throw err;
+    ^
+
+Error: Cannot find module './config/connection'
+    at Function.Module._resolveFilename (internal/modules/cjs/loader.js:613:15)
+    at Function.Module._load (internal/modules/cjs/loader.js:539:25)
+    at Module.require (internal/modules/cjs/loader.js:667:17)
+    at require (internal/modules/cjs/helpers.js:20:18)
+    at Object.<anonymous> (/home/nelamartino/reeas/modules/updateStation.js:1:74)
+    at Module._compile (internal/modules/cjs/loader.js:738:30)
+    at Object.Module._extensions..js (internal/modules/cjs/loader.js:749:10)
+    at Module.load (internal/modules/cjs/loader.js:630:32)
+    at tryModuleLoad (internal/modules/cjs/loader.js:570:12)
+    at Function.Module._load (internal/modules/cjs/loader.js:562:3)
