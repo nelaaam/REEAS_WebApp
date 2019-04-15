@@ -1,0 +1,28 @@
+child = require('child_process');
+getInformation = require('./getInformation_test');
+integrateVelocity = require('../scripts/calculator').integrateVelocity;
+//arrange data according to arrival time
+let station1_data_z = [[-329848,	-330398,	-330528,	-330526,	-330459,	-330517,	-330816,	-331237,	-331496,	-331338,	-331213,	-331047,	-330537,	-330175,	-330053,	-330038,	-330022,	-329520,	-328404,	-327490,	-327270,	-326942,	-326201,	-325507,	-324948,	-324584,	-324496,	-324637,	-324806,	-324927,	-324915,	-324764,	-324739,	-324756,	-324825,	-325160,	-325871,	-326760,	-327326,	-327302,	-326968,	-327100,	-327734,	-328502,	-329449,	-330227,	-330355,	-329934,	-329691,	-330171]]; //array of data va
+let station1_data_y = []; //array of data nsa
+let station2_data_z = []; //array of data va
+let station2_data_y = []; //array of data nsa
+let station3_data_z = []; //array of data va
+let station3_data_y = []; //array of data nsa
+
+let raw_data = [station1_data_z, station2_data_z, station3_data_z, station1_data_y, station2_data_y, station3_data_y];
+for (var i = 0; i < 6; i++) {
+    pgd[i] = calculator.integrateVelocity(raw_data[i]);
+}
+
+let p_at = []; //array of p-arrival time in string
+let s_at = []; //array of s-arrival time in string
+let station_latitude = []; //array of lat
+let station_longitude = []; //array of long
+
+let promise = [p_at, s_at, pgd, station_latitude, station_longitude];
+let information = child.fork(getInformation);
+information.send(promise);
+information.on('message', (earthquake_information) => {
+    console.log("Test Results:")
+    console.log(earthquake_information);
+});
